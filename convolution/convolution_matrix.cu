@@ -55,8 +55,6 @@ __global__ void convolution(int** dd_mat_a, int n_rows_a, int n_cols_a ,int** dd
 				offset += cc*dd;
 			}
 		}
-		offset = offset>0?offset:0;
-		offset = (int)offset%254 + 10;
 		dd_mat_c[row][col] = offset;
 		//dd_mat_c[row][col] = -1;
 	}
@@ -99,8 +97,6 @@ __global__ void convolution_complete(int** dd_mat_a, int n_rows_a, int n_cols_a 
 				offset += cc*dd;
 			}
 		}
-		offset = offset>0?offset:0;
-		offset = (int)offset%255 + 1;
 		dd_mat_c[row][col] = offset;
 		//dd_mat_c[row][col] = -1;
 	}
@@ -183,9 +179,9 @@ __global__ void matrix_mult(int** dd_mat_a, int n_rows_a, int n_cols_a ,int** dd
 
 
 void fill_kernel_3x3(int** mat, int n, int m){
-    mat[0][0]=-1; mat[0][1]=0; mat[0][2]=1;
-    mat[1][0]=-1; mat[1][1]=0; mat[1][2]=1;
-    mat[2][0]=-1; mat[2][1]=0; mat[2][2]=1;
+    mat[0][0]=2; mat[0][1]=3; mat[0][2]=2;
+    mat[1][0]=2; mat[1][1]=0; mat[1][2]=2;
+    mat[2][0]=2; mat[2][1]=3; mat[2][2]=2;
 }
 
 
@@ -342,89 +338,25 @@ int main(int argc, char *argv[]){
 
 	
 
-	string title1,title2;
-	char rows[5];
-	char cols[5];
-	int n_rows = -1;
-	int n_cols = -1;
-
-
-	ifstream myReadFile;
-	myReadFile.open("img/mario.pgm");
-
-	char out_temp[10];
-	
-	int** mat_a;
-
-	if (myReadFile.is_open()){
-
-		std::getline(myReadFile,title1);
-		std::getline(myReadFile,title2);
-
-		myReadFile >> rows;
-		n_rows = atoi(rows);
-		//n_rows = 30;
-		cout << n_rows << endl;
-
-		myReadFile >> cols;
-		n_cols = atoi(cols);
-		//n_cols = 30;
-		cout << n_cols << endl;
-
-		/////////////////////////////////////////////////////////////
-		mat_a 		= (int** )malloc(sizeof(int*) * n_rows 			);	
-		mat_a[0] 	= (int*  )malloc(sizeof(int ) * n_rows * n_cols );	
-		
-		for( int i=1 ; i<n_rows ; i++ ){
-			mat_a[i] = mat_a[i-1]+n_cols;
-		}
-
-		/////////////////////////////////////////////////////////////
-		int n_temp;
-		for(int i=0 ; i<n_rows ; i++){
-			for(int j=0 ; j<n_cols ; j++){
-				if(!myReadFile.eof()){
-					myReadFile >> out_temp;
-					n_temp = atoi(out_temp);
-					mat_a[i][j] = n_temp;
-					//cout << n_temp-1000 << endl;	
-				}
-			}
-		}
-		//while (!myReadFile.eof()){
-		//	myReadFile >> out_temp;
-		//	n_temp = atoi(out_temp);
-		//	cout << n_temp-1000 << endl;
-		//}
-	}
-	myReadFile.close();
-
-
-
-
-
 	/////////////////////////////////////////////////////
 
-	int n_rows_a = n_rows;
-	int n_cols_a = n_cols;
+	int n_rows_a = 10;
+	int n_cols_a = 10;
 
 	int n_rows_b = 3;  //n_kernel
 	int n_cols_b = 3; //n_kernel
 
-	int n_rows_c = n_rows;
-	int n_cols_c = n_cols;
+	int n_rows_c = 10;
+	int n_cols_c = 10;
 
 
 
-	//int** mat_a; int** d_mat_a;	 int** dd_mat_a;	
-	//int** mat_a;
-
-				 int** d_mat_a;	 int** dd_mat_a;	
+	int** mat_a; int** d_mat_a;	 int** dd_mat_a;	
 	int** mat_b; int** d_mat_b;	 int** dd_mat_b;	
 	int** mat_c; int** d_mat_c;	 int** dd_mat_c;	
 
-	create_copy( mat_a, d_mat_a, dd_mat_a, n_rows_a, n_cols_a	);
-	//create( mat_a, d_mat_a, dd_mat_a, n_rows_a, n_cols_a	);
+	//create_copy( mat_a, d_mat_a, dd_mat_a, n_rows_a, n_cols_a	);
+	create( mat_a, d_mat_a, dd_mat_a, n_rows_a, n_cols_a	);
 	
 	create_kernell_static( mat_b, d_mat_b, dd_mat_b, n_rows_b, n_cols_b 	); 
 	//create_kernell_random( mat_b, d_mat_b, dd_mat_b, n_rows_b, n_cols_b 	);
@@ -442,9 +374,9 @@ int main(int argc, char *argv[]){
 
 	////////////////////////////////////////////////////
 	
-	//convolution<<<grid,blockNum>>>(dd_mat_a, n_rows_a, n_cols_a, dd_mat_b, n_rows_b, n_cols_b, dd_mat_c, n_rows_c, n_cols_c);
+	convolution<<<grid,blockNum>>>(dd_mat_a, n_rows_a, n_cols_a, dd_mat_b, n_rows_b, n_cols_b, dd_mat_c, n_rows_c, n_cols_c);
 
-	convolution_complete<<<grid,blockNum>>>(dd_mat_a, n_rows_a, n_cols_a, dd_mat_b, n_rows_b, n_cols_b, dd_mat_c, n_rows_c, n_cols_c);
+	//convolution_complete<<<grid,blockNum>>>(dd_mat_a, n_rows_a, n_cols_a, dd_mat_b, n_rows_b, n_cols_b, dd_mat_c, n_rows_c, n_cols_c);
 
 
 
@@ -468,22 +400,6 @@ int main(int argc, char *argv[]){
 	print(mat_c,n_rows_c,n_cols_c);
 	
 	
-	//////////////////////////////////////////////
-	ofstream myfile;
-	myfile.open ("mario3.pgm");
-	myfile << title1 <<endl;
-	myfile << title2 <<endl;
-	myfile << n_rows_c <<" "<< n_cols_c <<endl;
-
-  	for(int i=0 ; i<n_rows_c ; i++){
-		for(int j=0 ; j<n_cols_c ; j++){
-			myfile << mat_c[i][j] <<endl;
-		}
-	}
-
-	myfile.close();
-	//////////////////////////////////////////////
-
   
 	cudaFree(dd_mat_a);
 	cudaFree(dd_mat_b);
