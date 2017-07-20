@@ -1,7 +1,23 @@
-all: programCimgAndCuda
+all: convolutionImgKernelRandom convolutionImgKernelEdgeDetection \
+		convolutionImgKernelGaussianBlur convolutionImgKernelSharpen \
+		convolutionMatrixComplete convolutionMatrixSinBordes
 
-programCimgAndCuda: convolution.o
-	g++ -o programCimgAndCuda convolution.o imageCimg.cpp -O2 -L/usr/X11R6/lib -lm -lpthread -lX11  
 
-convolution.o:
-    nvcc -c convolution.cu 
+convolutionImgKernelRandom:
+	nvcc -lcuda  convolutionImgKernelRandom.cu -arch=compute_20 -o convolutionImgKernelRandom
+
+convolutionImgKernelEdgeDetection:
+	nvcc -lcuda  convolutionImgKernelEdgeDetection.cu -arch=compute_20 -o convolutionImgKernelEdgeDetection
+
+convolutionImgKernelGaussianBlur:
+	nvcc -lcuda  convolutionImgKernelGaussianBlur.cu -arch=compute_20 -o convolutionImgKernelGaussianBlur
+
+convolutionImgKernelSharpen:
+	nvcc -lcuda  convolutionImgKernelSharpen.cu -arch=compute_20 -o convolutionImgKernelSharpen
+
+convolutionMatrixComplete:
+	nvcc -lcuda  convolutionMatrixComplete.cu -arch=compute_20 -o convolutionMatrixComplete
+
+convolutionMatrixSinBordes:
+	nvcc -lcuda  convolutionMatrixSinBordes.cu -arch=compute_20 -o convolutionMatrixSinBordes
+

@@ -55,8 +55,9 @@ __global__ void convolution(int** dd_mat_a, int n_rows_a, int n_cols_a ,int** dd
 				offset += cc*dd;
 			}
 		}
+		offset = offset>0?offset:0;
 		dd_mat_c[row][col] = offset;
-		//dd_mat_c[row][col] = -1;
+		//dd_mat_c[row][col] = dd_mat_a[row][col];
 	}
 
 }
@@ -97,8 +98,9 @@ __global__ void convolution_complete(int** dd_mat_a, int n_rows_a, int n_cols_a 
 				offset += cc*dd;
 			}
 		}
+		//offset = offset>0?offset:0;
 		dd_mat_c[row][col] = offset;
-		//dd_mat_c[row][col] = -1;
+		//dd_mat_c[row][col] = dd_mat_a[row][col];
 	}
 
 }
@@ -178,12 +180,25 @@ __global__ void matrix_mult(int** dd_mat_a, int n_rows_a, int n_cols_a ,int** dd
 }
 
 
-void fill_kernel_3x3(int** mat, int n, int m){
-    mat[0][0]=2; mat[0][1]=3; mat[0][2]=2;
-    mat[1][0]=2; mat[1][1]=0; mat[1][2]=2;
-    mat[2][0]=2; mat[2][1]=3; mat[2][2]=2;
-}
 
+
+/////////////////////////////////////////////////////////////////////////
+///////////////// Filter Edge detection
+/////////////////////////////////////////////////////////////////////////
+void fill_kernel_3x3(int** mat, int n, int m, double scalar_kernel=1){
+    mat[0][0]=0; mat[0][1]=	1; mat[0][2]=0;
+    mat[1][0]=1; mat[1][1]=-4; mat[1][2]=1;
+    mat[2][0]=0; mat[2][1]=	1; mat[2][2]=0;
+
+    for(int i=0 ; i<n ; i++){
+		for(int j=0 ; j<m ; j++){
+			mat[i][j]=scalar_kernel*mat[i][j];
+		}
+	}
+}
+/////////////////////////////////////////////////////////////////////////
+///////////////// FIN Filter Edge detection
+/////////////////////////////////////////////////////////////////////////
 
 
 void fill(int** mat, int n, int m){
@@ -191,8 +206,8 @@ void fill(int** mat, int n, int m){
 	int i,j; 
 	for(i=0; i<n ;i++){
 		for(j=0; j<m ;j++)
-			//mat[i][j] = rand()%3+1;
-			mat[i][j] = 1;
+			mat[i][j] = rand()%5;
+			//mat[i][j] = 1;
 	}
 }
 
@@ -339,12 +354,13 @@ int main(int argc, char *argv[]){
 	
 
 	/////////////////////////////////////////////////////
+	
 
 	int n_rows_a = 10;
 	int n_cols_a = 10;
 
 	int n_rows_b = 3;  //n_kernel
-	int n_cols_b = 3; //n_kernel
+	int n_cols_b = 3;  //n_kernel
 
 	int n_rows_c = 10;
 	int n_cols_c = 10;
@@ -374,9 +390,9 @@ int main(int argc, char *argv[]){
 
 	////////////////////////////////////////////////////
 	
-	convolution<<<grid,blockNum>>>(dd_mat_a, n_rows_a, n_cols_a, dd_mat_b, n_rows_b, n_cols_b, dd_mat_c, n_rows_c, n_cols_c);
+	//convolution<<<grid,blockNum>>>(dd_mat_a, n_rows_a, n_cols_a, dd_mat_b, n_rows_b, n_cols_b, dd_mat_c, n_rows_c, n_cols_c);
 
-	//convolution_complete<<<grid,blockNum>>>(dd_mat_a, n_rows_a, n_cols_a, dd_mat_b, n_rows_b, n_cols_b, dd_mat_c, n_rows_c, n_cols_c);
+	convolution_complete<<<grid,blockNum>>>(dd_mat_a, n_rows_a, n_cols_a, dd_mat_b, n_rows_b, n_cols_b, dd_mat_c, n_rows_c, n_cols_c);
 
 
 
