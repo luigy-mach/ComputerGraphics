@@ -151,12 +151,16 @@ void create(int**& mat, int**& d_mat, int**& dd_mat, int n_rows, int n_cols, int
 
 int main(int argc, char *argv[]){
 
+	int n_rows_a = atoi(argv[1]);
+	int n_cols_a = atoi(argv[2]);
 
-	int n_rows_a = 3;
-	int n_cols_a = 5;
+	int n_rows_b = atoi(argv[3]);
+	int n_cols_b = atoi(argv[4]);
 
-	int n_rows_b = 5;
-	int n_cols_b = 7;
+	//int n_rows_a = 3;
+	//int n_cols_a = 5;
+	//int n_rows_b = 5;
+	//int n_cols_b = 7;
 
 	int n_rows_c = n_rows_a;
 	int n_cols_c = n_cols_b;
