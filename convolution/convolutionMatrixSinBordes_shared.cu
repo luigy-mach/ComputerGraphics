@@ -15,8 +15,9 @@ using namespace std;
 
 
 
-
-#define CONV_TILE_WIDTH 12
+#define TAM_KERNEL 3
+#define CONV_TILE_WIDTH 3
+#define CONV_TILE_WIDTH2 CONV_TILE_WIDTH+TAM_KERNEL-1
 //#define CONV_BLOCK_WIDTH 12
 
 __global__ void convolution_shared(int** dd_mat_a, int n_rows_a, int n_cols_a ,int** dd_mat_b, int n_rows_b, int n_cols_b, int** dd_mat_c, int n_rows_c, int n_cols_c){
@@ -25,7 +26,9 @@ __global__ void convolution_shared(int** dd_mat_a, int n_rows_a, int n_cols_a ,i
 	int n_kernel_row = n_rows_b; //n_cols_b
 	int n_kernel_col = n_cols_b; //n_cols_b
 	
-	__shared__ int Ns[CONV_TILE_WIDTH+n_kernel_row-1][CONV_TILE_WIDTH+n_kernel_col-1];
+	//const int row_tile = CONV_TILE_WIDTH+n_kernel_row-1;
+	//const int col_tile = CONV_TILE_WIDTH+n_kernel_col-1;
+	__shared__ int Ns[CONV_TILE_WIDTH2][CONV_TILE_WIDTH2];
 
 	int bx = blockIdx.x;
 	int by = blockIdx.y;
@@ -41,18 +44,18 @@ __global__ void convolution_shared(int** dd_mat_a, int n_rows_a, int n_cols_a ,i
 	int col = bx*blockDimx + tx;	
 
 
-	if ( (row >= 0) && (row < n_rows_a) &&
-        (col >= 0) && (col < n_cols_a) ) {
-      Ns[ty][tx] = dd_mat_a[row*n_cols_a + col]; 
+	if ( (row >= 0) && (row < n_rows_a) && (col >= 0) && (col < n_cols_a) ) 
+	{
+      Ns[ty][tx] = dd_mat_a[row][col]; 
     }
     else {
       Ns[ty][tx] = 0;
     }
 
-    int value;
+    //int value;
 
-	//if( ((int)(n_kernel_row/2)-1)< row && row<(n_rows_a-(int)(n_kernel_row/2)) && 
-	//	((int)(n_kernel_col/2)-1)< col && col<(n_cols_a-(int)(n_kernel_col/2)) 	){
+	if( ((int)(n_kernel_row/2)-1)< row && row<(n_rows_a-(int)(n_kernel_row/2)) && 
+		((int)(n_kernel_col/2)-1)< col && col<(n_cols_a-(int)(n_kernel_col/2)) 	){
 
 		double offset = 0;
 		for(int k=(n_kernel_row/2) ; k<CONV_TILE_WIDTH+CONV_TILE_WIDTH-(n_kernel_row/2); k++){
@@ -64,9 +67,9 @@ __global__ void convolution_shared(int** dd_mat_a, int n_rows_a, int n_cols_a ,i
 				offset += cc*dd;
 			}
 		}
-		dd_mat_c[row][col] = offset;
-		//dd_mat_c[row][col] = -1;
-	//}
+		//dd_mat_c[row][col] = offset;
+	}
+		dd_mat_c[row][col] = -1;
 }
 
 
@@ -428,7 +431,8 @@ int main(int argc, char *argv[]){
 
 	////////////////////////////////////////////////////
 	
-	convolution<<<grid,blockNum>>>(dd_mat_a, n_rows_a, n_cols_a, dd_mat_b, n_rows_b, n_cols_b, dd_mat_c, n_rows_c, n_cols_c);
+	//convolution<<<grid,blockNum>>>(dd_mat_a, n_rows_a, n_cols_a, dd_mat_b, n_rows_b, n_cols_b, dd_mat_c, n_rows_c, n_cols_c);
+	convolution_shared<<<grid,blockNum>>>(dd_mat_a, n_rows_a, n_cols_a, dd_mat_b, n_rows_b, n_cols_b, dd_mat_c, n_rows_c, n_cols_c);
 
 	//convolution_complete<<<grid,blockNum>>>(dd_mat_a, n_rows_a, n_cols_a, dd_mat_b, n_rows_b, n_cols_b, dd_mat_c, n_rows_c, n_cols_c);
 
